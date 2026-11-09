@@ -1,0 +1,7 @@
+gradio>=4.0
+huggingface_hub>=0.25
+scikit-learn==1.6.1
+rdkit==2024.3.2
+numpy
+pandas
+matplotlib
