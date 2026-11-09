@@ -25,7 +25,11 @@ import gradio as gr
 import spaces
 
 @spaces.GPU
-def _zerogpu_dummy(): return None
+def _zerogpu_dummy():
+    # Dummy GPU function so the Space starts on free ZeroGPU hardware.
+    # Never called; prediction code runs on CPU as before.
+    return None
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -101,10 +105,20 @@ def plot_fda(df):
     ax.set_title("Predicted vs wet-lab pIC50 (FDA-12)")
     return fig
 
+def smiles_to_2d(smiles):
+    """Return a 2D depiction image (PIL) of the SMILES, or None if invalid."""
+    from rdkit import Chem
+    from rdkit.Chem import Draw, AllChem
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        return None
+    AllChem.Compute2DCoords(mol)
+    return Draw.MolToImage(mol, size=(400, 300))
+
 def single(smiles, model_name):
     df = pd.DataFrame({"compound_id": ["input"], "smiles": [smiles]})
     out = predict_df(df, model_name)
-    return out, plot_dist(out), plot_fda(out)
+    return out, smiles_to_2d(smiles), plot_dist(out), plot_fda(out)
 
 def batch(file, model_name):
     df = pd.read_csv(file.name)
@@ -121,9 +135,10 @@ with gr.Blocks(title="Computational Chemistry and Drug Discovery — DPP-4 pIC50
         smi = gr.Textbox(label="SMILES", placeholder="CC(=O)Oc1ccccc1C(=O)O")
         btn = gr.Button("Predict")
         out1 = gr.Dataframe(label="Prediction preview")
+        img1 = gr.Image(label="2D structure")
         p1 = gr.Plot(label="pIC50 distribution")
         p2 = gr.Plot(label="Predicted vs wet-lab (FDA-12, if applicable)")
-        btn.click(single, [smi, model], [out1, p1, p2])
+        btn.click(single, [smi, model], [out1, img1, p1, p2])
     with gr.Tab("Batch CSV"):
         f = gr.File(label="CSV with a 'smiles' column (optional 'compound_id')")
         btn2 = gr.Button("Predict batch")
