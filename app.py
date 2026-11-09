@@ -22,6 +22,10 @@ import io, os
 import numpy as np
 import pandas as pd
 import gradio as gr
+import spaces
+
+@spaces.GPU
+def _zerogpu_dummy(): return None
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
