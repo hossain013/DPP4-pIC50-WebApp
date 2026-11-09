@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>DPP-4 pIC50 Inference Page</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f7f5; --surface:#ffffff; --surface2:#eef2ef; --ink:#14201c; --muted:#5b6b64; --line:#dbe3dd;
+    --accent:#0f766e; --accent-ink:#ffffff; --accent-soft:#e0f2ef; --amber:#92400e; --amber-bg:#fef3c7;
+    --good:#15803d; --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0e1513; --surface:#16201d; --surface2:#1c2a26; --ink:#e8efec; --muted:#9db0a8; --line:#2a3a35; --accent:#2dd4bf; --accent-ink:#06201c; --accent-soft:#14332e; --amber:#fbbf24; --amber-bg:#2c2110; --good:#4ade80; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Public Sans",system-ui,sans-serif;line-height:1.55}
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 18px 56px}
+  a{color:var(--accent);font-weight:600}
+  .mono{font-family:"IBM Plex Mono",monospace}
+  /* Header */
+  .kicker{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  h1{font-size:clamp(1.9rem,4.5vw,2.9rem);line-height:1.08;margin:.35rem 0 .6rem;font-weight:800;letter-spacing:-.02em}
+  .lede{font-size:1.05rem;color:var(--muted);max-width:44rem;margin:0}
+  .modelbar{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center}
+  .modelbar .label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700}
+  .pill{display:inline-flex;align-items:center;gap:7px;background:var(--accent-soft);color:var(--ink);border-radius:999px;padding:5px 12px;font-size:.85rem;font-weight:600}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--good);flex:none}
+  /* Metrics */
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+  .metric{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  .metric b{font-size:1.65rem;display:block;line-height:1;font-weight:800}
+  .metric span{font-size:.82rem;color:var(--muted);display:block;margin-top:6px}
+  /* Panels */
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin-top:22px;overflow:hidden}
+  .panel-head{padding:18px 20px 0}
+  .panel-head h2{margin:0;font-size:1.25rem;font-weight:800;letter-spacing:-.01em}
+  .panel-head p{margin:.35rem 0 0;color:var(--muted);font-size:.93rem}
+  .panel-body{padding:18px 20px 22px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;padding:16px 20px 0}
+  .tab{appearance:none;border:1px solid var(--line);background:var(--surface2);color:var(--ink);border-radius:999px;padding:8px 16px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
+  .tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .tabpane{display:none}.tabpane.active{display:block}
+  label.flabel{display:block;font-weight:700;font-size:.9rem;margin-bottom:8px}
+  textarea,input[type=text]{width:100%;font-family:"IBM Plex Mono",monospace;font-size:.92rem;padding:13px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+  textarea:focus,input:focus{outline:2px solid var(--accent);outline-offset:1px}
+  .hint{font-size:.83rem;color:var(--muted);margin-top:8px}
+  .btn{appearance:none;border:0;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:700;padding:12px 22px;border-radius:10px;cursor:pointer;margin-top:14px}
+  .btn.secondary{background:var(--surface2);color:var(--ink);border:1px solid var(--line)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .chip{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;font:inherit;font-size:.86rem;font-weight:600;cursor:pointer}
+  .chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+  /* Result */
+  .result{margin-top:18px;border:1px solid var(--line);border-radius:12px;padding:18px;background:var(--surface2);display:none}
+  .result.show{display:block}
+  .result h3{margin:0 0 4px;font-size:1.05rem}
+  .result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+  .result-grid div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .result-grid b{font-size:1.3rem;display:block}
+  .result-grid span{font-size:.78rem;color:var(--muted)}
+  .badge{display:inline-block;font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+  .notice{margin-top:14px;background:var(--amber-bg);color:var(--amber);border-radius:10px;padding:12px 14px;font-size:.9rem;display:none}
+  .notice.show{display:block}
+  /* Pipeline */
+  .steps{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:6px}
+  .step{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .step .n{width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;margin-bottom:8px}
+  .step b{font-size:.9rem;display:block}
+  .step p{font-size:.82rem;color:var(--muted);margin:.3rem 0 0}
+  /* Code */
+  pre{background:#0d1b18;color:#d7f5ee;border-radius:12px;padding:16px;overflow-x:auto;font-family:"IBM Plex Mono",monospace;font-size:.83rem;line-height:1.6;margin:0}
+  @media (prefers-color-scheme: light){ pre{background:#12211d} }
+  .codewrap{position:relative}
+  .copybtn{position:absolute;top:10px;right:10px;appearance:none;border:1px solid #35544d;background:#1b332e;color:#d7f5ee;border-radius:8px;padding:6px 12px;font:inherit;font-size:.8rem;font-weight:600;cursor:pointer}
+  /* Table */
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+  table{border-collapse:collapse;width:100%;min-width:560px;background:var(--surface)}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);font-size:.92rem}
+  th{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);background:var(--surface2)}
+  tr:last-child td{border-bottom:0}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  /* Links */
+  .linkcards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .linkcard{border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--surface);text-decoration:none;color:var(--ink);display:block}
+  .linkcard b{display:block;font-size:1rem;margin-bottom:4px;color:var(--ink)}
+  .linkcard span{font-size:.86rem;color:var(--muted);word-break:break-all}
+  .linkcard .go{color:var(--accent);font-size:.86rem;font-weight:700;margin-top:8px;display:block}
+  footer{margin-top:28px;color:var(--muted);font-size:.85rem}
+  @media (max-width:760px){
+    .metrics{grid-template-columns:1fr 1fr}
+    .steps{grid-template-columns:1fr 1fr}
+    .result-grid{grid-template-columns:1fr}
+    .linkcards{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="kicker">DPP-4 Inhibitor Potency · ExtraTrees Model</p>
+  <h1>DPP-4 pIC<sub>50</sub> Inference</h1>
+  <p class="lede">Paste a SMILES string and the app featurises it exactly as it did on Kaggle — Morgan fingerprint plus physicochemical descriptors — then feeds it to the original ExtraTrees model loaded from Hugging Face. You get back a predicted pIC<sub>50</sub> and IC<sub>50</sub>.</p>
+
+  <div class="modelbar">
+    <div><span class="label">Model invoked as</span><br><span class="mono" style="font-weight:600">Delower/dpp4-pic50-extra-trees</span></div>
+    <span class="pill"><span class="dot"></span> Original best model live · model.pkl 52,831,126 bytes</span>
+    <span class="pill">1,030 features · feature_0 … feature_1029</span>
+  </div>
+
+  <div class="metrics" role="list" aria-label="Model performance">
+    <div class="metric" role="listitem"><b>0.4449</b><span>Held-out RMSE — best of 43 models (LazyPredict screen)</span></div>
+    <div class="metric" role="listitem"><b>0.1437</b><span>Held-out MAE</span></div>
+    <div class="metric" role="listitem"><b>0.8668</b><span>Held-out R²</span></div>
+    <div class="metric" role="listitem"><b>0.9637</b><span>FDA-12 external RMSE (11 scored, vs wet-lab)</span></div>
+  </div>
+
+  <!-- INFERENCE -->
+  <section class="panel" aria-labelledby="inf-h">
+    <div class="tabs" role="tablist" aria-label="Inference mode">
+      <button class="tab" role="tab" aria-selected="true" data-tab="single">Single SMILES</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="batch">Batch CSV</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="how">How the backend works</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="results">Computational Experiment Results</button>
+    </div>
+
+    <div class="tabpane active" id="pane-single">
+      <div class="panel-head"><h2 id="inf-h">Predict one compound</h2><p>One SMILES in, one prediction out — the same input the Kaggle inference used.</p></div>
+      <div class="panel-body">
+        <label class="flabel" for="smiles">SMILES</label>
+        <textarea id="smiles" rows="3" placeholder="Paste a SMILES string here, e.g. from PubChem or ChEMBL…" spellcheck="false"></textarea>
+        <p class="hint">On submit, the SMILES is converted to a molecule, featurised (see “How the backend works”), and passed to the model as a named DataFrame — never a raw array.</p>
+        <button class="btn" id="runBtn" type="button">Run prediction on the live app →</button>
+        <div class="notice" id="liveNotice">This static page can’t run the Python model in your browser — the ExtraTrees pickle, RDKit and scikit-learn run on the Hugging Face Space. Your SMILES is ready to paste there, or run the verified examples below to see real output from the model.</div>
+
+        <p class="flabel" style="margin-top:22px">Verified examples — reproduced from the live model</p>
+        <p class="hint" style="margin-top:0">These three were re-run through the fixed app’s own <span class="mono">load_model</span> + <span class="mono">predict_df</span> against <span class="mono">Delower/dpp4-pic50-extra-trees</span> and match the repo’s <span class="mono">fda.csv</span> exactly (max difference 1.8e-15).</p>
+        <div class="chips" id="chips">
+          <button class="chip" type="button" data-ex="0" aria-pressed="false">Alogliptin</button>
+          <button class="chip" type="button" data-ex="1" aria-pressed="false">Saxagliptin</button>
+          <button class="chip" type="button" data-ex="2" aria-pressed="false">Teneligliptin</button>
+        </div>
+        <div class="result" id="result" aria-live="polite">
+          <h3 id="rName">—</h3>
+          <span class="badge" id="rClass">—</span>
+          <div class="result-grid">
+            <div><b id="rPic">—</b><span>Predicted pIC50</span></div>
+            <div><b id="rIc">—</b><span>Predicted IC50 (nM) · 10^(9 − pIC50)</span></div>
+            <div><b id="rKnown">—</b><span>Known wet-lab pIC50 (comparison only)</span></div>
+          </div>
+          <p class="hint">Wet-lab values are never used for training, validation or tuning — comparison only.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabpane" id="pane-batch">
+      <div class="panel-head"><h2>Predict a batch</h2><p>Upload a CSV on the live app and every row is featurised and predicted the same way.</p></div>
+      <div class="panel-body">
+        <p style="margin-top:0">The file needs one column headed exactly <span class="mono"><b>smiles</b></span> (lowercase — an uppercase <span class="mono">SMILES</span> header raises a KeyError):</p>
+        <div class="codewrap"><pre>smiles
+&lt;SMILES for compound 1&gt;
+&lt;SMILES for compound 2&gt;
+&lt;SMILES for compound 3&gt;</pre></div>
+        <p class="hint">Output is a results table with predicted pIC<sub>50</sub> and predicted IC<sub>50</sub> (nM) per row, downloadable as CSV from the live app.</p>
+        <a class="btn" style="display:inline-block;text-decoration:none" href="https://huggingface.co/Delower/dpp4-pic50-extra-trees" target="_blank" rel="noopener">Open the model on Hugging Face →</a>
+      </div>
+    </div>
+
+    <div class="tabpane" id="pane-how">
+      <div class="panel-head"><h2>Same featurisation as Kaggle, every time</h2><p>When you submit a SMILES, the features are extracted on the server at that moment — you never see or supply them yourself.</p></div>
+      <div class="panel-body">
+        <div class="steps">
+          <div class="step"><div class="n">1</div><b>SMILES → molecule</b><p>RDKit parses the string into a molecular structure.</p></div>
+          <div class="step"><div class="n">2</div><b>Morgan fingerprint</b><p>1,024 bits, radius 2 — the circular fingerprint.</p></div>
+          <div class="step"><div class="n">3</div><b>6 physicochemical</b><p>MolWt, MolLogP, TPSA, NumHDonors, NumHAcceptors, NumRotatableBonds — in that order.</p></div>
+          <div class="step"><div class="n">4</div><b>Named DataFrame</b><p>1,030 columns labelled feature_0 … feature_1029, as the Pipeline expects.</p></div>
+          <div class="step"><div class="n">5</div><b>Predict</b><p>ExtraTrees returns pIC50; IC50 (nM) = 10<sup>(9 − pIC50)</sup>.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabpane" id="pane-results">
+      <div class="panel-head"><h2>Computational Experiment Results — FDA-12</h2><p>The FDA-12 dataframe from the model repo (<span class="mono">fda.csv</span>): the original ExtraTrees model’s predictions for the 12 FDA-approved gliptins, against wet-lab values. Wet-lab values are comparison only — never used for training, validation or tuning.</p></div>
+      <div class="panel-body">
+        <div class="metrics" style="margin-top:0;grid-template-columns:repeat(3,1fr)">
+          <div class="metric"><b>0.9637</b><span>RMSE in pIC50 — 11 scored drugs</span></div>
+          <div class="metric"><b>0.6794</b><span>MAE in pIC50 — 11 scored drugs</span></div>
+          <div class="metric"><b>11 / 12</b><span>Scored — Gosogliptin excluded, no wet-lab value</span></div>
+        </div>
+        <div class="tablewrap" style="margin-top:14px">
+          <table>
+            <thead><tr><th>Compound</th><th class="num">Predicted pIC50</th><th class="num">Predicted IC50 (nM)</th><th>Predicted class</th><th class="num">Wet-lab pIC50</th><th class="num">Wet-lab IC50 (nM)</th><th class="num">Error in pIC50</th></tr></thead>
+            <tbody>
+              <tr><td><b>Alogliptin</b></td><td class="num mono">8.48</td><td class="num">3.31</td><td>Potent</td><td class="num">8.12</td><td class="num">7.5</td><td class="num">+0.36</td></tr>
+              <tr><td><b>Saxagliptin</b></td><td class="num mono">6.84</td><td class="num">143.3</td><td>Moderate</td><td class="num">8.82</td><td class="num">1.5</td><td class="num">−1.98</td></tr>
+              <tr><td><b>Teneligliptin</b></td><td class="num mono">7.41</td><td class="num">39.1</td><td>Potent</td><td class="num">9.40</td><td class="num">0.4</td><td class="num">−1.99</td></tr>
+              <tr><td><b>Vildagliptin</b></td><td class="num mono">8.36</td><td class="num">4.37</td><td>Potent</td><td class="num">7.47</td><td class="num">34</td><td class="num">+0.89</td></tr>
+              <tr><td><b>Anagliptin</b></td><td class="num mono">8.48</td><td class="num">3.30</td><td>Potent</td><td class="num">8.42</td><td class="num">3.8</td><td class="num">+0.06</td></tr>
+              <tr><td><b>Evogliptin</b></td><td class="num mono">9.28</td><td class="num">0.52</td><td>Potent</td><td class="num">9.18</td><td class="num">0.67</td><td class="num">+0.10</td></tr>
+              <tr><td><b>Gemigliptin</b></td><td class="num mono">8.39</td><td class="num">4.10</td><td>Potent</td><td class="num">7.80</td><td class="num">16</td><td class="num">+0.59</td></tr>
+              <tr><td><b>Gosogliptin</b></td><td class="num mono">6.97</td><td class="num">107.9</td><td>Moderate</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>
+              <tr><td><b>Linagliptin</b></td><td class="num mono">8.87</td><td class="num">1.35</td><td>Potent</td><td class="num">9.85</td><td class="num">0.14</td><td class="num">−0.98</td></tr>
+              <tr><td><b>Omarigliptin</b></td><td class="num mono">8.63</td><td class="num">2.32</td><td>Potent</td><td class="num">8.80</td><td class="num">1.6</td><td class="num">−0.17</td></tr>
+              <tr><td><b>Sitagliptin</b></td><td class="num mono">7.85</td><td class="num">14.2</td><td>Potent</td><td class="num">7.74</td><td class="num">18</td><td class="num">+0.11</td></tr>
+              <tr><td><b>Trelagliptin</b></td><td class="num mono">8.64</td><td class="num">2.28</td><td>Potent</td><td class="num">8.89</td><td class="num">1.3</td><td class="num">−0.25</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="hint">Error = predicted − wet-lab pIC50. Predicted class: Potent at pIC50 ≥ 7.0, Moderate at 6.0–7.0. Summary over the 11 scored drugs (Gosogliptin excluded — no wet-lab value): <b>RMSE 0.9637, MAE 0.6794</b> — just under the 1.0 log-unit bar. Saxagliptin (−1.98) and Teneligliptin (−1.99) are the two large misses.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BACKEND CODE -->
+  <section class="panel" aria-labelledby="code-h">
+    <div class="panel-head"><h2 id="code-h">Backend — invoking the model</h2><p>This is the whole trick: name the repo, load the pickle, featurise, predict. Nothing else is hosted anywhere.</p></div>
+    <div class="panel-body">
+      <div class="codewrap">
+        <button class="copybtn" id="copyBtn" type="button">Copy</button>
+<pre id="codeBlock">from huggingface_hub import hf_hub_download
+import pickle
+
+repo = "Delower/dpp4-pic50-extra-trees"
+path = hf_hub_download(repo, "model.pkl")
+model = pickle.load(open(path, "rb"))
+
+# features: Morgan 1024 (radius 2) + 6 physchem, in order
+# MolWt, MolLogP, TPSA, NumHDonors, NumHAcceptors, NumRotatableBonds
+# -&gt; DataFrame with columns feature_0 ... feature_1029
+
+predicted_pIC50  = model.predict(features)[0]
+predicted_IC50_nM = 10 ** (9 - predicted_pIC50)</pre>
+      </div>
+      <p class="hint">Running it needs the packages in <span class="mono">requirements.txt</span> — gradio, huggingface_hub, scikit-learn, rdkit, lazypredict (needed to unpickle this model), pandas, numpy, matplotlib. On a Hugging Face Space they install automatically at startup; GitHub itself only stores the code and installs nothing. Transformers / torch are <em>not</em> needed for ExtraTrees — they’re only for the later Transformer, ChemBERTa, GAT and LTN models.</p>
+    </div>
+  </section>
+
+  <!-- FDA TABLE -->
+  <section class="panel" aria-labelledby="fda-h">
+    <div class="panel-head"><h2 id="fda-h">FDA-12 check — verified predictions</h2><p>The 12 FDA-approved gliptins are the final unseen test set, decontaminated from training. Full table ships as <span class="mono">fda.csv</span> in the model repo; the three below are the predictions independently re-verified through the app code.</p></div>
+    <div class="panel-body">
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Compound</th><th class="num">Predicted pIC50</th><th class="num">Predicted IC50</th><th class="num">Known IC50</th><th class="num">Known pIC50</th></tr></thead>
+          <tbody>
+            <tr><td><b>Alogliptin</b></td><td class="num mono">8.480525</td><td class="num">3.31 nM</td><td class="num">7.5 nM</td><td class="num">8.12</td></tr>
+            <tr><td><b>Saxagliptin</b></td><td class="num mono">6.843725</td><td class="num">143.31 nM</td><td class="num">1.5 nM</td><td class="num">8.82</td></tr>
+            <tr><td><b>Teneligliptin</b></td><td class="num mono">7.408114</td><td class="num">39.07 nM</td><td class="num">0.4 nM</td><td class="num">9.40</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="hint">The full 12-compound table is in the “Computational Experiment Results” tab above. Across the 11 scored compounds (Gosogliptin excluded, no wet-lab value) the model scores RMSE 0.9637 and MAE 0.6794 against wet-lab values — just under the 1.0 log-unit bar. Saxagliptin (−1.98) and Teneligliptin (−1.99) are the two large misses.</p>
+    </div>
+  </section>
+
+  <!-- LINKS -->
+  <section class="panel" aria-labelledby="links-h">
+    <div class="panel-head"><h2 id="links-h">Where it lives</h2><p>Code on GitHub, model on Hugging Face — the web page is the front door to both.</p></div>
+    <div class="panel-body">
+      <div class="linkcards">
+        <a class="linkcard" href="https://huggingface.co/Delower/dpp4-pic50-extra-trees" target="_blank" rel="noopener">
+          <b>Hugging Face — the model</b>
+          <span>huggingface.co/Delower/dpp4-pic50-extra-trees</span>
+          <span class="go">model.pkl · metrics.csv · fda.csv · infer.py →</span>
+        </a>
+        <a class="linkcard" href="https://github.com/hossain013/DPP4-pIC50-WebApp" target="_blank" rel="noopener">
+          <b>GitHub — the app code</b>
+          <span>github.com/hossain013/DPP4-pIC50-WebApp</span>
+          <span class="go">app.py · requirements.txt · README · MIT →</span>
+        </a>
+      </div>
+      <p class="hint">The live running app is the Hugging Face Space built from this repo (<span class="mono">huggingface.co/spaces/Delower/dpp4-pic50-webapp</span>); a GitHub Pages front page at <span class="mono">hossain013.github.io/DPP4-pIC50-WebApp/</span> points to it. No model pickle is stored on GitHub — the model loads from Hugging Face at runtime.</p>
+    </div>
+  </section>
+
+  <footer>DPP-4 pIC50 predictor · ExtraTrees on Morgan 1024 + 6 physicochemical descriptors · Part of the NeSyDPP-4 project (Hossain, Saghapour &amp; Chen, <i>Frontiers in Bioinformatics</i> 2025). Predictions are research estimates, not measured values.</footer>
+</div>
+
+<script>
+(function(){
+  // Tabs
+  var tabs=document.querySelectorAll('.tab');
+  tabs.forEach(function(t){
+    t.addEventListener('click',function(){
+      tabs.forEach(function(x){x.setAttribute('aria-selected','false')});
+      t.setAttribute('aria-selected','true');
+      document.querySelectorAll('.tabpane').forEach(function(p){p.classList.remove('active')});
+      document.getElementById('pane-'+t.getAttribute('data-tab')).classList.add('active');
+    });
+  });
+
+  // Verified examples (real, re-run through the app's own predict_df)
+  var examples=[
+    {name:'Alogliptin', pic:8.480525, ic:'3.31 nM', known:'8.12', cls:'Potent · pIC50 ≥ 7.0'},
+    {name:'Saxagliptin', pic:6.843725, ic:'143.31 nM', known:'8.82', cls:'Moderate · pIC50 6.0–7.0'},
+    {name:'Teneligliptin', pic:7.408114, ic:'39.07 nM', known:'9.40', cls:'Potent · pIC50 ≥ 7.0'}
+  ];
+  var result=document.getElementById('result');
+  document.querySelectorAll('#chips .chip').forEach(function(chip){
+    chip.addEventListener('click',function(){
+      document.querySelectorAll('#chips .chip').forEach(function(c){c.setAttribute('aria-pressed','false')});
+      chip.setAttribute('aria-pressed','true');
+      var ex=examples[Number(chip.getAttribute('data-ex'))];
+      document.getElementById('rName').textContent=ex.name;
+      document.getElementById('rClass').textContent=ex.cls;
+      document.getElementById('rPic').textContent=ex.pic.toFixed(6);
+      document.getElementById('rIc').textContent=ex.ic;
+      document.getElementById('rKnown').textContent=ex.known;
+      result.classList.add('show');
+      result.scrollIntoView({behavior:'smooth',block:'nearest'});
+    });
+  });
+
+  // Run button: honest hand-off to the live Space
+  document.getElementById('runBtn').addEventListener('click',function(){
+    var v=document.getElementById('smiles').value.trim();
+    var n=document.getElementById('liveNotice');
+    n.classList.add('show');
+    n.scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+
+  // Copy code
+  document.getElementById('copyBtn').addEventListener('click',function(){
+    var txt=document.getElementById('codeBlock').textContent;
+    var btn=this;
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){btn.textContent='Copied ✓';setTimeout(function(){btn.textContent='Copy'},1600);});
+    }
+  });
+})();
+</script>
+</body>
+</html>
