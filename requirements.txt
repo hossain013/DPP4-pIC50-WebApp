@@ -5,3 +5,4 @@ rdkit==2024.3.2
 numpy
 pandas
 matplotlib
+lazypredict==0.4.0

@@ -4,14 +4,14 @@ This app is prepared now; it is TESTED only after training finishes,
 once the HF repos below actually exist.
 
 Models (HF repos, loaded on demand by model name):
-  - extra-trees      delower2021/dpp4-pic50-extra-trees
-  - random-forest    delower2021/dpp4-pic50-random-forest
-  - xgboost          delower2021/dpp4-pic50-xgboost
-  - dnn              delower2021/dpp4-pic50-dnn
-  - ltn              delower2021/dpp4-pic50-ltn        (NeSy / LTN)
-  - gat              delower2021/dpp4-pic50-gat        (graph)
-  - transformer      delower2021/dpp4-pic50-transformer (SMILES Transformer)
-  - chemberta        delower2021/dpp4-pic50-chemberta  (LLM / ChemBERTa)
+  - extra-trees      Delower/dpp4-pic50-extra-trees
+  - random-forest    Delower/dpp4-pic50-random-forest
+  - xgboost          Delower/dpp4-pic50-xgboost
+  - dnn              Delower/dpp4-pic50-dnn
+  - ltn              Delower/dpp4-pic50-ltn        (NeSy / LTN)
+  - gat              Delower/dpp4-pic50-gat        (graph)
+  - transformer      Delower/dpp4-pic50-transformer (SMILES Transformer)
+  - chemberta        Delower/dpp4-pic50-chemberta  (LLM / ChemBERTa)
 
 Features: single SMILES input, or batch CSV upload (smiles column,
 optional compound_id). Preview table, predicted pIC50 / IC50 / class,
@@ -27,14 +27,14 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 MODEL_REPOS = {
-    "ExtraTrees (best)": "delower2021/dpp4-pic50-extra-trees",
-    "RandomForest": "delower2021/dpp4-pic50-random-forest",
-    "XGBoost (tuned)": "delower2021/dpp4-pic50-xgboost",
-    "DNN": "delower2021/dpp4-pic50-dnn",
-    "LTN (NeSy)": "delower2021/dpp4-pic50-ltn",
-    "GAT (graph)": "delower2021/dpp4-pic50-gat",
-    "Transformer": "delower2021/dpp4-pic50-transformer",
-    "ChemBERTa (LLM)": "delower2021/dpp4-pic50-chemberta",
+    "ExtraTrees (best)": "Delower/dpp4-pic50-extra-trees",
+    "RandomForest": "Delower/dpp4-pic50-random-forest",
+    "XGBoost (tuned)": "Delower/dpp4-pic50-xgboost",
+    "DNN": "Delower/dpp4-pic50-dnn",
+    "LTN (NeSy)": "Delower/dpp4-pic50-ltn",
+    "GAT (graph)": "Delower/dpp4-pic50-gat",
+    "Transformer": "Delower/dpp4-pic50-transformer",
+    "ChemBERTa (LLM)": "Delower/dpp4-pic50-chemberta",
 }
 _cache = {}
 
@@ -71,7 +71,8 @@ def predict_df(df, model_name):
                 Descriptors.NumRotatableBonds(mol)]
         X.append(fp + phys)
     df = df.copy()
-    df["predicted_pIC50"] = model.predict(np.array(X, dtype=float))
+    Xdf = pd.DataFrame(X, columns=[f"feature_{i}" for i in range(1030)])
+    df["predicted_pIC50"] = model.predict(Xdf)
     df["predicted_IC50_nM"] = 10 ** (9 - df["predicted_pIC50"])
     df["predicted_class"] = np.where(df["predicted_pIC50"] >= 7, "potent",
         np.where(df["predicted_pIC50"] >= 6, "moderate", "weak"))
