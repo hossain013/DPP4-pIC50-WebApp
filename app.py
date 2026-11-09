@@ -128,6 +128,16 @@ with gr.Blocks(title="Computational Chemistry and Drug Discovery — DPP-4 pIC50
         q2 = gr.Plot(label="Predicted vs wet-lab (FDA-12, if applicable)")
         dl = gr.DownloadButton(label="Download predictions (CSV)")
         btn2.click(batch, [f, model], [out2, q1, q2, dl])
+
+    with gr.Tab("Computational Experiment Results"):
+        gr.Markdown("FDA-12 inference with ExtraTrees (original LazyPredict model, RMSE 0.4449). Wet-lab values are comparison-only. RMSE 0.9637, MAE 0.6794 over the 11 drugs with wet-lab values (Gosogliptin excluded).")
+        fda_btn = gr.Button("Show FDA-12 results as dataframe")
+        fda_out = gr.Dataframe(label="FDA-12 results")
+        def show_fda():
+            import pandas as pd
+            return pd.read_csv("fda.csv") if __import__("os").path.exists("fda.csv") else pd.DataFrame({"note": ["fda.csv is in the Hugging Face repo Delower/dpp4-pic50-extra-trees"]})
+        fda_btn.click(show_fda, [], [fda_out])
+
     gr.Markdown("---\n© 2026 Delower Hossain — Computational Chemistry and Drug Discovery. All rights reserved.")
 
 if __name__ == "__main__":
